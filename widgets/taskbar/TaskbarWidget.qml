@@ -11,11 +11,11 @@ Item {
 		id: dockBackground
 		anchors.fill: parent
 		color: Env.colors.primary
-		radius: height / 2
+		radius: 18
 		border.color: Qt.rgba(1, 1, 1, 0.15)
 		border.width: 1
 
-		implicitWidth: appRow.implicitWidth + 24
+		implicitWidth: appRow.implicitWidth + 20
 		implicitHeight: appRow.implicitHeight + 16
 	}
 
@@ -92,41 +92,43 @@ Item {
 					id: macTooltip
 					anchors.horizontalCenter: parent.horizontalCenter
 					y: -28
-					visible: appItem.tooltipShown
-					opacity: appItem.tooltipShown ? 1 : 0
+					visible: appItem.tooltipShown ?? hoveredHandler.hovered
+					opacity: visible ? 1 : 0
 
-					Behavior on opacity {
-						NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-					}
-					
-					Behavior on y {
-						NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
-					}
+					readonly property int maxWidth: 220
+					readonly property int padX: 10
+					readonly property int padY: 6
 
-					// лёгкий "подъём" при появлении
-					onVisibleChanged: {
-						y = visible ? -16 : -18
-					}
+					Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+					Behavior on y { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+
+					onVisibleChanged: y = visible ? -17 : -20
 
 					Rectangle {
+						id: tooltipBg
 						anchors.centerIn: parent
 						radius: 8
 						color: Qt.rgba(0, 0, 0, 0.55)
 						border.width: 1
 						border.color: Qt.rgba(1, 1, 1, 0.12)
 
-						// размеры по тексту
-						implicitHeight: tooltipText.implicitHeight + 10
-						implicitWidth: Math.min(220, tooltipText.implicitWidth + 14)
+						// ширина по тексту, но с ограничением maxWidth
+						implicitWidth: Math.min(macTooltip.maxWidth, tooltipText.implicitWidth + macTooltip.padX * 2)
+						implicitHeight: tooltipText.implicitHeight + macTooltip.padY * 2
 
 						Text {
 							id: tooltipText
 							anchors.centerIn: parent
+
+							width: tooltipBg.implicitWidth - macTooltip.padX * 2
+
 							text: modelData.title
 							color: Qt.rgba(1, 1, 1, 0.92)
 							font.pixelSize: 11
 							elide: Text.ElideRight
 							maximumLineCount: 1
+							wrapMode: Text.NoWrap
+							clip: true
 						}
 					}
 				}

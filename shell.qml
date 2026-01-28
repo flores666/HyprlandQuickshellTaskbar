@@ -26,8 +26,11 @@ Variants {
 				anchors { bottom: true }
 				margins { bottom: 7 }
 
-				implicitWidth: taskbarWidget.implicitWidth
+				implicitWidth: 3000
+				//implicitWidth: taskbarWidget.implicitWidth
 				implicitHeight: taskbarWidget.implicitHeight + tooltipSpace
+
+				mask: Region { item: slideContainer }
 
 				Item {
 					anchors.fill: parent
