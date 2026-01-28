@@ -4,13 +4,13 @@ import "../../globals"
 
 Item {
 	id: taskbar
-	implicitHeight: 64
+	implicitHeight: 44
 	implicitWidth: dockBackground.implicitWidth
 
 	Rectangle {
 		id: dockBackground
 		anchors.fill: parent
-		color: Qt.rgba(0.08, 0.08, 0.09, 0.85)
+		color: Env.colors.primary
 		radius: height / 2
 		border.color: Qt.rgba(1, 1, 1, 0.15)
 		border.width: 1
@@ -21,7 +21,7 @@ Item {
 
 	Row {
 		id: appRow
-		spacing: 10
+		spacing: 6
 		anchors.centerIn: parent
 
 		Repeater {
@@ -29,8 +29,8 @@ Item {
 
 			delegate: Item {
 				id: appItem
-				implicitWidth: 44
-				implicitHeight: 44
+				implicitWidth: 34
+				implicitHeight: 34
 
 				Rectangle {
 					id: iconBackground
@@ -44,8 +44,8 @@ Item {
 				Image {
 					id: appIcon
 					anchors.centerIn: parent
-					width: 26
-					height: 26
+					width: 24
+					height: 24
 					fillMode: Image.PreserveAspectFit
 					source: "image://icon/" + modelData.className
 				}
@@ -54,14 +54,14 @@ Item {
 					anchors.centerIn: parent
 					text: modelData.title.slice(0, 1).toUpperCase()
 					color: Env.colors.text
-					font.pixelSize: 18
+					font.pixelSize: 12
 					visible: appIcon.status !== Image.Ready
 				}
 
 				Rectangle {
-					width: 6
-					height: 6
-					radius: 3
+					width: 5
+					height: 5
+					radius: 4
 					color: Qt.rgba(1, 1, 1, 0.8)
 					anchors.horizontalCenter: parent.horizontalCenter
 					anchors.bottom: parent.bottom

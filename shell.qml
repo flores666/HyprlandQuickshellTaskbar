@@ -10,11 +10,15 @@ Variants {
 		PanelWindow {
 			property var modelData
 			screen: modelData
+			color: "transparent"
+			
+			margins {
+				bottom: 7
+			}
 
 			anchors {
 				bottom: true
-				horizontalCenter: true
-				bottomMargin: 12
+				//horizontalCenter: parent.horizontalCenter
 			}
 
 			exclusiveZone: 0
