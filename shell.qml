@@ -13,21 +13,26 @@ Variants {
 
 			anchors {
 				bottom: true
-				left: true
-				right: true
+				horizontalCenter: true
+				bottomMargin: 12
 			}
 
-			implicitHeight: 20
+			exclusiveZone: 0
+			implicitHeight: taskbarPanel.implicitHeight
+			implicitWidth: taskbarPanel.implicitWidth
 
 			Rectangle {
 				id: taskbarPanel
-				color: Env.colors.primary
+				color: "transparent"
+				implicitWidth: taskbarWidget.implicitWidth
+				implicitHeight: taskbarWidget.implicitHeight
 				anchors {
 					fill: parent
 				}
 
 				TaskbarWidget {
-					anchors.fill: parent
+					id: taskbarWidget
+					anchors.centerIn: parent
 				}
 			}
 		}
