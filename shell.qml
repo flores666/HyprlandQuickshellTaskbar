@@ -1,44 +1,142 @@
 import QtQuick
 import Quickshell
+import QtQuick.Controls
 import "widgets/taskbar"
 import "globals"
 
 Variants {
-	model: Quickshell.screens;
+    model: Quickshell.screens
 
-	delegate: Component {
-		PanelWindow {
-			property var modelData
-			screen: modelData
-			color: "transparent"
-			
-			margins {
-				bottom: 7
-			}
+    delegate: Component {
+        Item {
+            property var modelData
+            readonly property var scr: modelData
 
-			anchors {
-				bottom: true
-				//horizontalCenter: parent.horizontalCenter
-			}
+            // --- MAIN TASKBAR WINDOW (появляется/исчезает) ---
+            PanelWindow {
+                id: taskbarWindow
+                screen: scr
+                color: "transparent"
+                exclusiveZone: 0
 
-			exclusiveZone: 0
-			implicitHeight: taskbarPanel.implicitHeight
-			implicitWidth: taskbarPanel.implicitWidth
+                // окно скрыто, когда панель спрятана (чтобы не перехватывать клики)
+                visible: false
 
-			Rectangle {
-				id: taskbarPanel
-				color: "transparent"
-				implicitWidth: taskbarWidget.implicitWidth
-				implicitHeight: taskbarWidget.implicitHeight
-				anchors {
-					fill: parent
-				}
+                anchors { bottom: true }
+                margins { bottom: 7 }
 
-				TaskbarWidget {
-					id: taskbarWidget
-					anchors.centerIn: parent
-				}
-			}
-		}
-	}
+                implicitWidth: taskbarWidget.implicitWidth
+                implicitHeight: taskbarWidget.implicitHeight
+
+                Item {
+                    anchors.fill: parent
+                    clip: true
+
+                    Item {
+                        id: slideContainer
+                        width: taskbarWidget.implicitWidth
+                        height: taskbarWidget.implicitHeight
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+
+                        // "вылезает" снизу вверх
+                        y: taskbarController.shown ? 0 : (height + 14)
+
+                        TaskbarWidget {
+                            id: taskbarWidget
+                            anchors.centerIn: parent
+                        }
+
+                        Behavior on y {
+                            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                        }
+
+                        // 1) Пока курсор на панели — не прячем
+                        HoverHandler {
+                            id: panelHover
+                            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.TouchScreen
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    taskbarController.show()   // если навели прямо на панель — убедимся что она показана
+                                    autoHideTimer.stop()
+                                } else {
+                                    // ушли с панели -> через 2 сек спрячем
+                                    autoHideTimer.restart()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- TRIGGER WINDOW (тонкая зона внизу экрана) ---
+            PanelWindow {
+                id: triggerWindow
+                screen: scr
+                color: "transparent"
+                exclusiveZone: 0
+
+                anchors { bottom: true }
+                margins { bottom: 0 }
+
+                implicitHeight: 2
+                implicitWidth: scr.geometry ? scr.geometry.width : 1920
+
+                Item {
+                    anchors.fill: parent
+
+                    HoverHandler {
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.TouchScreen
+                        onHoveredChanged: {
+                            if (hovered) taskbarController.show()
+                        }
+                    }
+                }
+            }
+
+            // --- Controller: show/hide + автоскрытие ---
+            QtObject {
+                id: taskbarController
+                property bool shown: false
+
+                function show() {
+                    if (!taskbarWindow.visible)
+                        taskbarWindow.visible = true
+
+                    shown = true
+
+                    // если курсор НЕ на панели — запустим таймер
+                    if (!panelHover.hovered)
+                        autoHideTimer.restart()
+                }
+
+                function hide() {
+                    // если курсор на панели — не прячем
+                    if (panelHover.hovered) return
+
+                    shown = false
+                    hideFinalizeTimer.restart()
+                }
+            }
+
+            Timer {
+                id: autoHideTimer
+                interval: 2000
+                repeat: false
+                onTriggered: taskbarController.hide()
+            }
+
+            // дождаться окончания анимации и только потом скрыть окно
+            Timer {
+                id: hideFinalizeTimer
+                interval: 220
+                repeat: false
+                onTriggered: {
+                    if (!taskbarController.shown)
+                        taskbarWindow.visible = false
+                }
+            }
+        }
+    }
 }
+
