@@ -11,6 +11,7 @@ Variants {
 		Item {
 			property var modelData
 			readonly property var scr: modelData
+			property var tooltipSpace: 34
 
 			// --- MAIN TASKBAR WINDOW (появляется/исчезает) ---
 			PanelWindow {
@@ -26,7 +27,7 @@ Variants {
 				margins { bottom: 7 }
 
 				implicitWidth: taskbarWidget.implicitWidth
-				implicitHeight: taskbarWidget.implicitHeight
+				implicitHeight: taskbarWidget.implicitHeight + tooltipSpace
 
 				Item {
 					anchors.fill: parent

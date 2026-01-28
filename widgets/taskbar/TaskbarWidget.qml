@@ -31,6 +31,14 @@ Item {
 				id: appItem
 				implicitWidth: 34
 				implicitHeight: 34
+				property bool tooltipShown: false
+
+				Timer {
+					id: tooltipDelay
+					interval: 200
+					repeat: false
+					onTriggered: appItem.tooltipShown = true
+				}
 
 				Rectangle {
 					id: iconBackground
@@ -70,11 +78,58 @@ Item {
 
 				HoverHandler {
 					id: hoveredHandler
+					onHoveredChanged: {
+						if (hovered) {
+							tooltipDelay.restart()
+						} else {
+							tooltipDelay.stop()
+							appItem.tooltipShown = false
+						}
+					}
 				}
 
-				ToolTip.visible: hoveredHandler.hovered
-				ToolTip.text: modelData.title
-				ToolTip.delay: 200
+				Item {
+					id: macTooltip
+					anchors.horizontalCenter: parent.horizontalCenter
+					y: -28
+					visible: appItem.tooltipShown
+					opacity: appItem.tooltipShown ? 1 : 0
+
+					Behavior on opacity {
+						NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+					}
+					
+					Behavior on y {
+						NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+					}
+
+					// лёгкий "подъём" при появлении
+					onVisibleChanged: {
+						y = visible ? -16 : -18
+					}
+
+					Rectangle {
+						anchors.centerIn: parent
+						radius: 8
+						color: Qt.rgba(0, 0, 0, 0.55)
+						border.width: 1
+						border.color: Qt.rgba(1, 1, 1, 0.12)
+
+						// размеры по тексту
+						implicitHeight: tooltipText.implicitHeight + 10
+						implicitWidth: Math.min(220, tooltipText.implicitWidth + 14)
+
+						Text {
+							id: tooltipText
+							anchors.centerIn: parent
+							text: modelData.title
+							color: Qt.rgba(1, 1, 1, 0.92)
+							font.pixelSize: 11
+							elide: Text.ElideRight
+							maximumLineCount: 1
+						}
+					}
+				}
 			}
 		}
 	}
