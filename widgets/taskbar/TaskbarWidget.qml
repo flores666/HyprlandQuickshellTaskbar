@@ -79,6 +79,7 @@ Item {
 
 				HoverHandler {
 					id: hoveredHandler
+					cursorShape: Qt.PointingHandCursor
 					onHoveredChanged: {
 						if (hovered) {
 							tooltipDelay.restart()
