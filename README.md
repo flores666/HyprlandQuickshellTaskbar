@@ -1,0 +1,1 @@
+## Taskbar widget for quickshell
