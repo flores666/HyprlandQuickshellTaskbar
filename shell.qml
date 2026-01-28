@@ -5,138 +5,138 @@ import "widgets/taskbar"
 import "globals"
 
 Variants {
-    model: Quickshell.screens
+	model: Quickshell.screens
 
-    delegate: Component {
-        Item {
-            property var modelData
-            readonly property var scr: modelData
+	delegate: Component {
+		Item {
+			property var modelData
+			readonly property var scr: modelData
 
-            // --- MAIN TASKBAR WINDOW (появляется/исчезает) ---
-            PanelWindow {
-                id: taskbarWindow
-                screen: scr
-                color: "transparent"
-                exclusiveZone: 0
+			// --- MAIN TASKBAR WINDOW (появляется/исчезает) ---
+			PanelWindow {
+				id: taskbarWindow
+				screen: scr
+				color: "transparent"
+				exclusiveZone: 0
 
-                // окно скрыто, когда панель спрятана (чтобы не перехватывать клики)
-                visible: false
+				// окно скрыто, когда панель спрятана (чтобы не перехватывать клики)
+				visible: false
 
-                anchors { bottom: true }
-                margins { bottom: 7 }
+				anchors { bottom: true }
+				margins { bottom: 7 }
 
-                implicitWidth: taskbarWidget.implicitWidth
-                implicitHeight: taskbarWidget.implicitHeight
+				implicitWidth: taskbarWidget.implicitWidth
+				implicitHeight: taskbarWidget.implicitHeight
 
-                Item {
-                    anchors.fill: parent
-                    clip: true
+				Item {
+					anchors.fill: parent
+					clip: true
 
-                    Item {
-                        id: slideContainer
-                        width: taskbarWidget.implicitWidth
-                        height: taskbarWidget.implicitHeight
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.bottom
+					Item {
+						id: slideContainer
+						width: taskbarWidget.implicitWidth
+						height: taskbarWidget.implicitHeight
 
-                        // "вылезает" снизу вверх
-                        y: taskbarController.shown ? 0 : (height + 14)
+						anchors.horizontalCenter: parent.horizontalCenter
+						anchors.bottom: parent.bottom
 
-                        TaskbarWidget {
-                            id: taskbarWidget
-                            anchors.centerIn: parent
-                        }
+						// спрятано: уезжает вниз за границу окна
+						anchors.bottomMargin: taskbarController.shown ? 0 : -(height + 14)
 
-                        Behavior on y {
-                            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
-                        }
+						Behavior on anchors.bottomMargin {
+							NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+						}
 
-                        // 1) Пока курсор на панели — не прячем
-                        HoverHandler {
-                            id: panelHover
-                            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.TouchScreen
-                            onHoveredChanged: {
-                                if (hovered) {
-                                    taskbarController.show()   // если навели прямо на панель — убедимся что она показана
-                                    autoHideTimer.stop()
-                                } else {
-                                    // ушли с панели -> через 2 сек спрячем
-                                    autoHideTimer.restart()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+						TaskbarWidget {
+							id: taskbarWidget
+							anchors.centerIn: parent
+						}
 
-            // --- TRIGGER WINDOW (тонкая зона внизу экрана) ---
-            PanelWindow {
-                id: triggerWindow
-                screen: scr
-                color: "transparent"
-                exclusiveZone: 0
+						HoverHandler {
+							id: panelHover
+							acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.TouchScreen
+							onHoveredChanged: {
+								if (hovered) {
+									taskbarController.show()
+									autoHideTimer.stop()
+								} else {
+									autoHideTimer.restart()
+								}
+							}
+						}
 
-                anchors { bottom: true }
-                margins { bottom: 0 }
+					}
+				}
+			}
 
-                implicitHeight: 2
-                implicitWidth: scr.geometry ? scr.geometry.width : 1920
+			// --- TRIGGER WINDOW (тонкая зона внизу экрана) ---
+			PanelWindow {
+				id: triggerWindow
+				screen: scr
+				color: "transparent"
+				exclusiveZone: 0
 
-                Item {
-                    anchors.fill: parent
+				anchors { bottom: true }
+				margins { bottom: 0 }
 
-                    HoverHandler {
-                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.TouchScreen
-                        onHoveredChanged: {
-                            if (hovered) taskbarController.show()
-                        }
-                    }
-                }
-            }
+				implicitHeight: 2
+				implicitWidth: taskbarWidget.width
 
-            // --- Controller: show/hide + автоскрытие ---
-            QtObject {
-                id: taskbarController
-                property bool shown: false
+				Item {
+					anchors.fill: parent
 
-                function show() {
-                    if (!taskbarWindow.visible)
-                        taskbarWindow.visible = true
+					HoverHandler {
+						acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.TouchScreen
+						onHoveredChanged: {
+							if (hovered) taskbarController.show()
+						}
+					}
+				}
+			}
 
-                    shown = true
+			// --- Controller: show/hide + автоскрытие ---
+			QtObject {
+				id: taskbarController
+				property bool shown: false
 
-                    // если курсор НЕ на панели — запустим таймер
-                    if (!panelHover.hovered)
-                        autoHideTimer.restart()
-                }
+				function show() {
+					if (!taskbarWindow.visible)
+					taskbarWindow.visible = true
 
-                function hide() {
-                    // если курсор на панели — не прячем
-                    if (panelHover.hovered) return
+					shown = true
 
-                    shown = false
-                    hideFinalizeTimer.restart()
-                }
-            }
+					// если курсор НЕ на панели — запустим таймер
+					if (!panelHover.hovered)
+					autoHideTimer.restart()
+				}
 
-            Timer {
-                id: autoHideTimer
-                interval: 2000
-                repeat: false
-                onTriggered: taskbarController.hide()
-            }
+				function hide() {
+					// если курсор на панели — не прячем
+					if (panelHover.hovered) return
 
-            // дождаться окончания анимации и только потом скрыть окно
-            Timer {
-                id: hideFinalizeTimer
-                interval: 220
-                repeat: false
-                onTriggered: {
-                    if (!taskbarController.shown)
-                        taskbarWindow.visible = false
-                }
-            }
-        }
-    }
+					shown = false
+					hideFinalizeTimer.restart()
+				}
+			}
+
+			Timer {
+				id: autoHideTimer
+				interval: 2000
+				repeat: false
+				onTriggered: taskbarController.hide()
+			}
+
+			// дождаться окончания анимации и только потом скрыть окно
+			Timer {
+				id: hideFinalizeTimer
+				interval: 220
+				repeat: false
+				onTriggered: {
+					if (!taskbarController.shown)
+					taskbarWindow.visible = false
+				}
+			}
+		}
+	}
 }
 
