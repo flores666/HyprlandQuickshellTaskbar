@@ -14,10 +14,15 @@ Item {
 		return data.map(client => {
 			const title = client.title ? String(client.title).trim() : "";
 			const className = client.class ? String(client.class).trim() : "";
+			const ws = client.workspace
+            ? (client.workspace.name ?? client.workspace.id ?? "")
+			: (client.workspace ?? "");
+
 			return {
 				address: client.address ?? "",
 				title: title !== "" ? title : className,
-				className: className
+				className: className,
+				workspace: ws
 			};
 		}).filter(client => client.title !== "");
 	}

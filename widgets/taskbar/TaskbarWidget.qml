@@ -1,3 +1,4 @@
+import Quickshell.Io
 import QtQuick
 import QtQuick.Controls
 import "../../globals"
@@ -131,6 +132,31 @@ Item {
 							clip: true
 						}
 					}
+				}
+
+				TapHandler {
+					acceptedButtons: Qt.LeftButton
+					onTapped: {
+						const ws = modelData.workspace;
+						const addr = modelData.address;
+
+						// if dont want cursor to teleport on windows,
+						// set this in hyprland.conf
+						// cursor {
+ 						//     no_warps = true
+						// }
+						focusProcess.command = [
+							"hyprctl",
+							"--batch",
+							`dispatch workspace ${ws}; dispatch focuswindow address:${addr}`
+						];
+						focusProcess.running = true;
+					}
+				}
+
+				Process {
+					id: focusProcess
+					running: false
 				}
 			}
 		}
