@@ -29,37 +29,36 @@ Item {
 
 	function handleRawEvent(event) {
 		if (event.name === "openwindow") {
-			const parts = event.data.split(',');
-			const address = (parts[0] ?? "").trim();
+			const parts = String(event.data ?? "").split(",");
+			const address = "0x" + (parts[0] ?? "").trim();
 			const workspace = (parts[1] ?? "").trim();
 			const className = (parts[2] ?? "").trim();
-			const title = parts.slice(3).join(',').trim();
-
+			const title = parts.slice(3).join(",").trim();
 			const normalized = normalizeClients([{
 				title: title,
 				class: className,
 				address: address,
 				workspace: workspace
 			}]);
-
+			
 			const client = normalized[0];
-			if (client) {
-				taskbarManager.clients = [
-					...taskbarManager.clients.filter(c => c.address !== client.address),
-					client
-				];
-			}
+			if (!client) return;
+
+			taskbarManager.clients = [
+				...taskbarManager.clients.filter(c => c.address !== client.address),
+				client
+			];
 			return;
 		}
 
 		if (event.name === "closewindow") {
 			const address = String(event.data ?? "").trim();
-			if (address.length === 0) return;
-
+			if (!address) return;
 			taskbarManager.clients = taskbarManager.clients.filter(c => c.address !== address);
 			return;
 		}
 	}
+
 	Process {
 		id: clientsProcess
 		command: ["hyprctl", "clients", "-j"]
