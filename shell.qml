@@ -125,7 +125,7 @@ Variants {
 
 			Timer {
 				id: autoHideTimer
-				interval: 2000
+				interval: 1000
 				repeat: false
 				onTriggered: taskbarController.hide()
 			}

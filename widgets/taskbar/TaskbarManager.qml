@@ -15,7 +15,7 @@ Item {
 			const title = client.title ? String(client.title).trim() : "";
 			const className = client.class ? String(client.class).trim() : "";
 			const ws = client.workspace
-            ? (client.workspace.name ?? client.workspace.id ?? "")
+			? (client.workspace.name ?? client.workspace.id ?? "")
 			: (client.workspace ?? "");
 
 			return {
@@ -24,23 +24,31 @@ Item {
 				className: className,
 				workspace: ws
 			};
-		}).filter(client => client.title !== "");
+		}).filter(client => client.title !== "" && client.address !== "");
+	}
+
+	function normAddress(addr) {
+		const s = String(addr ?? "").trim();
+		if (s === "") return "";
+		return s.startsWith("0x") ? s : ("0x" + s);
 	}
 
 	function handleRawEvent(event) {
 		if (event.name === "openwindow") {
 			const parts = String(event.data ?? "").split(",");
-			const address = "0x" + (parts[0] ?? "").trim();
+
+			const address = normAddress(parts[0]);
 			const workspace = (parts[1] ?? "").trim();
 			const className = (parts[2] ?? "").trim();
 			const title = parts.slice(3).join(",").trim();
+
 			const normalized = normalizeClients([{
 				title: title,
 				class: className,
 				address: address,
 				workspace: workspace
 			}]);
-			
+
 			const client = normalized[0];
 			if (!client) return;
 
@@ -52,9 +60,24 @@ Item {
 		}
 
 		if (event.name === "closewindow") {
-			const address = String(event.data ?? "").trim();
+			const address = normAddress(event.data);
 			if (!address) return;
+
 			taskbarManager.clients = taskbarManager.clients.filter(c => c.address !== address);
+			return;
+		}
+
+		if (event.name === "windowtitlev2") {
+			const parts = String(event.data ?? "").split(",");
+			const address = normAddress(parts[0]);
+			const title = parts.slice(1).join(",").trim();
+
+			taskbarManager.clients = taskbarManager.clients.map(item => {
+				if (item.address === address) {
+					return Object.assign({}, item, { title: title });
+				}
+				return item;
+			});
 			return;
 		}
 	}
