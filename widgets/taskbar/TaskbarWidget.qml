@@ -26,12 +26,13 @@ Item {
 		anchors.centerIn: parent
 
 		Repeater {
-			model: TaskbarManager.clients
+			model: TaskbarManager.items
 
 			delegate: Item {
 				id: appItem
 				implicitWidth: 34
 				implicitHeight: 34
+
 				property bool tooltipShown: false
 
 				Timer {
@@ -67,6 +68,7 @@ Item {
 					visible: appIcon.status !== Image.Ready
 				}
 
+				// Индикатор "запущено"
 				Rectangle {
 					width: 5
 					height: 5
@@ -75,11 +77,12 @@ Item {
 					anchors.horizontalCenter: parent.horizontalCenter
 					anchors.bottom: parent.bottom
 					anchors.bottomMargin: 4
+					visible: !!modelData.running
 				}
 
 				HoverHandler {
 					id: hoveredHandler
-					//cursorShape: Qt.PointingHandCursor
+					cursorShape: Qt.PointingHandCursor
 					onHoveredChanged: {
 						if (hovered) {
 							tooltipDelay.restart()
@@ -90,11 +93,12 @@ Item {
 					}
 				}
 
+				// Минималистичный tooltip
 				Item {
 					id: macTooltip
 					anchors.horizontalCenter: parent.horizontalCenter
 					y: -28
-					visible: appItem.tooltipShown ?? hoveredHandler.hovered
+					visible: appItem.tooltipShown
 					opacity: visible ? 1 : 0
 
 					readonly property int maxWidth: 220
@@ -114,7 +118,6 @@ Item {
 						border.width: 1
 						border.color: Qt.rgba(1, 1, 1, 0.12)
 
-						// ширина по тексту, но с ограничением maxWidth
 						implicitWidth: Math.min(macTooltip.maxWidth, tooltipText.implicitWidth + macTooltip.padX * 2)
 						implicitHeight: tooltipText.implicitHeight + macTooltip.padY * 2
 
@@ -135,17 +138,29 @@ Item {
 					}
 				}
 
+				// Контекстное меню закрепления
+				Menu {
+					id: pinMenu
+					MenuItem {
+						text: TaskbarManager.isPinned(modelData.className) ? "Открепить" : "Закрепить"
+						onTriggered: TaskbarManager.togglePinned(modelData.className, modelData.title)
+					}
+				}
+
 				TapHandler {
-					acceptedButtons: Qt.LeftButton
-					onTapped: {
+					acceptedButtons: Qt.LeftButton | Qt.RightButton
+					onTapped: (point, button) => {
+						if (button === Qt.RightButton) {
+							pinMenu.popup();
+							return;
+						}
+
+						// ЛКМ: фокусим только если запущено
+						if (!modelData.running) return;
+
 						const ws = modelData.workspace;
 						const addr = modelData.address;
 
-						// if dont want cursor to teleport on windows,
-						// set this in hyprland.conf
-						// cursor {
- 						//     no_warps = true
-						// }
 						focusProcess.command = [
 							"hyprctl",
 							"--batch",
@@ -163,3 +178,4 @@ Item {
 		}
 	}
 }
+
